@@ -44,17 +44,19 @@ function measure(
   ctx: CanvasRenderingContext2D,
   text: string,
   font: string,
-  fontSize: number
+  fontSize: number,
 ): { width: number; height: number } {
   ctx.font = `400 ${fontSize}px "${font}", sans-serif`;
   const metrics = ctx.measureText(text);
   const width = metrics.width;
   const ascent =
-    metrics.actualBoundingBoxAscent && !Number.isNaN(metrics.actualBoundingBoxAscent)
+    metrics.actualBoundingBoxAscent &&
+    !Number.isNaN(metrics.actualBoundingBoxAscent)
       ? metrics.actualBoundingBoxAscent
       : fontSize * 0.8;
   const descent =
-    metrics.actualBoundingBoxDescent && !Number.isNaN(metrics.actualBoundingBoxDescent)
+    metrics.actualBoundingBoxDescent &&
+    !Number.isNaN(metrics.actualBoundingBoxDescent)
       ? metrics.actualBoundingBoxDescent
       : fontSize * 0.2;
   const height = ascent + descent || fontSize * 1.15;
@@ -88,13 +90,20 @@ export default function WordCloud() {
     const height = container.clientHeight;
     const cx = width / 2;
     const cy = height / 2;
-    const bounds: Rect = { left: 8, top: 8, right: width - 8, bottom: height - 8 };
+    const bounds: Rect = {
+      left: 8,
+      top: 8,
+      right: width - 8,
+      bottom: height - 8,
+    };
 
     // Randomize size (biased toward mid-range, occasional standouts) and
     // place the biggest words first so they claim the center of the cloud.
     const withRandomSize = languages.map((word) => {
       const sizeRoll = Math.pow(Math.random(), 1.7);
-      const fontSize = Math.round(MIN_FONT_SIZE + sizeRoll * (MAX_FONT_SIZE - MIN_FONT_SIZE));
+      const fontSize = Math.round(
+        MIN_FONT_SIZE + sizeRoll * (MAX_FONT_SIZE - MIN_FONT_SIZE),
+      );
       return { word, fontSize };
     });
     withRandomSize.sort((a, b) => b.fontSize - a.fontSize);
@@ -109,7 +118,12 @@ export default function WordCloud() {
 
       // Try the word at full size, then progressively smaller, until it fits.
       for (let attempt = 0; attempt < 3 && !found; attempt++) {
-        const { width: textW, height: textH } = measure(ctx, word.text, word.font, size);
+        const { width: textW, height: textH } = measure(
+          ctx,
+          word.text,
+          word.font,
+          size,
+        );
         const { w, h } = rotatedBounds(textW, textH, rotation);
 
         let t = 0;
@@ -128,7 +142,10 @@ export default function WordCloud() {
             rect.right <= bounds.right &&
             rect.bottom <= bounds.bottom;
 
-          if (withinBounds && !placedRects.some((r) => rectsOverlap(rect, r, PADDING))) {
+          if (
+            withinBounds &&
+            !placedRects.some((r) => rectsOverlap(rect, r, PADDING))
+          ) {
             found = { x, y, w, h };
             break;
           }
@@ -144,7 +161,12 @@ export default function WordCloud() {
       if (!found) {
         // Last resort so every language still appears: place at a random
         // in-bounds spot even if it slightly overlaps a neighbor.
-        const { width: textW, height: textH } = measure(ctx, word.text, word.font, size);
+        const { width: textW, height: textH } = measure(
+          ctx,
+          word.text,
+          word.font,
+          size,
+        );
         const { w, h } = rotatedBounds(textW, textH, 0);
         const x = Math.max(bounds.left, Math.random() * (width - w));
         const y = Math.max(bounds.top, Math.random() * (height - h));
@@ -201,7 +223,6 @@ export default function WordCloud() {
       window.removeEventListener("resize", onResize);
       clearTimeout(resizeTimeout);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [computeLayout, seed]);
 
   return (
