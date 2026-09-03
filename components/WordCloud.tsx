@@ -260,26 +260,14 @@ export default function WordCloud() {
   return (
     <div
       ref={containerRef}
-      className="word-cloud"
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#f5f5f4",
-        overflow: "hidden",
-      }}
+      className="relative min-h-svh w-full overflow-hidden bg-[#f5f5f4]"
     >
-      <div
-        className="word-cloud__label"
-        style={{
-          pointerEvents: "none",
-        }}
-      >
+      <div className="pointer-events-none absolute left-6 top-[max(26px,env(safe-area-inset-top))] font-[Trebuchet_MS,sans-serif] text-sm font-semibold leading-[1.2] tracking-normal text-[#55534d] max-[600px]:bottom-[max(26px,env(safe-area-inset-bottom))] max-[600px]:left-4 max-[600px]:right-28 max-[600px]:top-auto max-[600px]:text-[13px]">
         Hello World in 50 languages
       </div>
 
       <button
-        className="word-cloud__shuffle"
+        className="absolute right-5 top-[max(14px,env(safe-area-inset-top))] min-h-10 cursor-pointer rounded-md border border-[#cfcfca] bg-transparent px-3 py-1.5 font-[Trebuchet_MS,sans-serif] text-[13px] font-semibold tracking-normal text-[#55534d] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#4a4a46] max-[600px]:bottom-[max(12px,env(safe-area-inset-bottom))] max-[600px]:right-3 max-[600px]:top-auto max-[600px]:min-h-11 max-[600px]:px-3.5 max-[600px]:py-2"
         onClick={() => setSeed((s) => s + 1)}
       >
         Shuffle
@@ -300,19 +288,13 @@ export default function WordCloud() {
           }}
         >
           <span
+            className="flex h-full w-full items-center justify-center whitespace-nowrap leading-none"
             style={{
-              display: "flex",
-              width: "100%",
-              height: "100%",
-              alignItems: "center",
-              justifyContent: "center",
               fontFamily: `"${w.font}", sans-serif`,
               fontSize: w.fontSize,
               color: "#000",
               transform: `rotate(${w.rotation}deg)`,
               transformOrigin: "center center",
-              whiteSpace: "nowrap",
-              lineHeight: 1,
             }}
           >
             {w.text}
