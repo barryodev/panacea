@@ -87,20 +87,27 @@ export default function WordCloud() {
     const width = container.clientWidth;
     const height = container.clientHeight;
     const cx = width / 2;
-    const cy = height / 2;
+    const isMobile = width < 600;
+    const topInset = isMobile ? 12 : 72;
+    const bottomInset = isMobile ? 82 : 12;
+    const cloudHeight = height - topInset - bottomInset;
+    const cloudCenter = isMobile ? 0.42 : 0.5;
+    const adjustedCy = topInset + cloudHeight * cloudCenter;
     const bounds: Rect = {
-      left: 8,
-      top: 8,
-      right: width - 8,
-      bottom: height - 8,
+      left: isMobile ? 12 : 8,
+      top: topInset,
+      right: width - (isMobile ? 12 : 8),
+      bottom: height - bottomInset,
     };
+    const minFontSize = isMobile ? 16 : MIN_FONT_SIZE;
+    const maxFontSize = isMobile ? 52 : MAX_FONT_SIZE;
 
     // Randomize size (biased toward mid-range, occasional standouts) and
     // place the biggest words first so they claim the center of the cloud.
     const withRandomSize = languages.map((word) => {
       const sizeRoll = Math.pow(Math.random(), 1.7);
       const fontSize = Math.round(
-        MIN_FONT_SIZE + sizeRoll * (MAX_FONT_SIZE - MIN_FONT_SIZE),
+        minFontSize + sizeRoll * (maxFontSize - minFontSize),
       );
       return { word, fontSize };
     });
@@ -131,7 +138,7 @@ export default function WordCloud() {
           const angle = 0.15 * t;
           const radius = 0.85 * t;
           const x = cx + radius * Math.cos(angle) - w / 2;
-          const y = cy + radius * Math.sin(angle) * 0.62 - h / 2;
+          const y = adjustedCy + radius * Math.sin(angle) * 0.62 - h / 2;
           const rect: Rect = { left: x, top: y, right: x + w, bottom: y + h };
 
           const withinBounds =
@@ -170,7 +177,7 @@ export default function WordCloud() {
           const angle = 0.15 * t;
           const radius = 0.85 * t;
           const x = cx + radius * Math.cos(angle) - w / 2;
-          const y = cy + radius * Math.sin(angle) * 0.62 - h / 2;
+          const y = adjustedCy + radius * Math.sin(angle) * 0.62 - h / 2;
           const rect: Rect = { left: x, top: y, right: x + w, bottom: y + h };
 
           if (!placedRects.some((r) => rectsOverlap(rect, r, PADDING))) {
@@ -182,7 +189,7 @@ export default function WordCloud() {
 
         if (!found) {
           let x = width + PADDING;
-          const y = cy - h / 2;
+          const y = adjustedCy - h / 2;
           while (
             placedRects.some((r) =>
               rectsOverlap(
@@ -253,6 +260,7 @@ export default function WordCloud() {
   return (
     <div
       ref={containerRef}
+      className="word-cloud"
       style={{
         position: "relative",
         width: "100%",
@@ -262,35 +270,17 @@ export default function WordCloud() {
       }}
     >
       <div
+        className="word-cloud__label"
         style={{
-          position: "absolute",
-          top: 20,
-          left: 24,
-          fontFamily: "system-ui, sans-serif",
-          fontSize: 13,
-          color: "#8a8a86",
-          letterSpacing: 0.2,
           pointerEvents: "none",
         }}
       >
-        Hello World, in 50 languages
+        Hello World in 50 languages
       </div>
 
       <button
+        className="word-cloud__shuffle"
         onClick={() => setSeed((s) => s + 1)}
-        style={{
-          position: "absolute",
-          top: 16,
-          right: 20,
-          fontFamily: "system-ui, sans-serif",
-          fontSize: 13,
-          color: "#4a4a46",
-          background: "transparent",
-          border: "1px solid #cfcfca",
-          borderRadius: 6,
-          padding: "6px 12px",
-          cursor: "pointer",
-        }}
       >
         Shuffle
       </button>
