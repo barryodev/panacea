@@ -4,12 +4,14 @@ import {
   calculateLayout,
   findOffscreenPlacement,
   findSpiralPlacement,
+  getFontUrl,
   getLayoutConfig,
   pickRotation,
   placeWord,
   randomizeWordSizes,
   rectsOverlap,
   rotatedBounds,
+  truncateWithEllipsis,
   type Rect,
 } from "./cloudUtils";
 
@@ -56,6 +58,40 @@ describe("rectsOverlap", () => {
 
   it("detects boxes separated below", () => {
     expect(rectsOverlap(box(0, 17, 10, 27), box(0, 0, 10, 10), 0)).toBe(false);
+  });
+});
+
+describe("getFontUrl", () => {
+  it("returns the supplied font URL", () => {
+    expect(
+      getFontUrl("Playfair Display", "https://github.com/example/font"),
+    ).toBe("https://github.com/example/font");
+  });
+
+  it("falls back to the Google Fonts specimen page", () => {
+    expect(getFontUrl("UnifrakturMaguntia", null)).toBe(
+      "https://fonts.google.com/specimen/UnifrakturMaguntia",
+    );
+  });
+
+  it("encodes font names in fallback URLs", () => {
+    expect(getFontUrl("Playfair Display", null)).toBe(
+      "https://fonts.google.com/specimen/Playfair%20Display",
+    );
+  });
+});
+
+describe("truncateWithEllipsis", () => {
+  it("leaves text at the limit unchanged", () => {
+    expect(truncateWithEllipsis("Hello", 5)).toBe("Hello");
+  });
+
+  it("appends three periods without a preceding space", () => {
+    expect(truncateWithEllipsis("Hello world", 8)).toBe("Hello...");
+  });
+
+  it("removes trailing whitespace before the ellipsis", () => {
+    expect(truncateWithEllipsis("Hello  world", 8)).toBe("Hello...");
   });
 });
 

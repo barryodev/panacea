@@ -34,6 +34,17 @@ export interface WordWithFontSize {
   fontSize: number;
 }
 
+export function getFontUrl(font: string, fontUrl: string | null): string {
+  return (
+    fontUrl ?? `https://fonts.google.com/specimen/${encodeURIComponent(font)}`
+  );
+}
+
+export function truncateWithEllipsis(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
 export function rectsOverlap(a: Rect, b: Rect, padding: number): boolean {
   return !(
     a.right + padding < b.left ||

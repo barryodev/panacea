@@ -184,4 +184,56 @@ test.describe("word cloud", () => {
       "English",
     );
   });
+
+  test("opens language information when a word is clicked", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await page.getByTitle("French").click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(
+      dialog.getByRole("heading", { name: "Français (French)" }),
+    ).toBeVisible();
+    await expect(dialog.locator("p").first()).toHaveText("Bonjour le monde");
+    await expect(dialog.locator("p").first()).toHaveCSS(
+      "font-family",
+      /Playfair Display/,
+    );
+    const summary = dialog.locator("p").nth(2);
+    await expect(summary).toBeVisible();
+    await expect(summary).not.toBeEmpty();
+    await expect(dialog.getByText("Font", { exact: true })).toBeVisible();
+    const fontRows = dialog.locator("dl > div");
+    await expect(fontRows.nth(0)).toContainText("Font name: Playfair Display");
+    await expect(fontRows.nth(1)).toContainText("Font author:");
+    await expect(fontRows.nth(2)).toContainText("Font description:");
+    await expect(fontRows.nth(2).locator("dd")).toContainText("...");
+    const readMoreLinks = dialog.getByRole("link", { name: "[Read More]" });
+    await expect(readMoreLinks).toHaveCount(2);
+    await expect(readMoreLinks.nth(0)).toHaveAttribute("href", /wikipedia.org/);
+    await expect(readMoreLinks.nth(1)).toHaveAttribute("href", /github.com/);
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+  });
+
+  test("provides a Google Fonts link when font repository data is unavailable", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await page.getByTitle("German").click();
+
+    const links = page.getByRole("dialog").getByRole("link", {
+      name: "[Read More]",
+    });
+    await expect(links).toHaveCount(2);
+    await expect(links.nth(1)).toHaveAttribute(
+      "href",
+      "https://fonts.google.com/specimen/UnifrakturMaguntia",
+    );
+  });
 });

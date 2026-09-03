@@ -7,7 +7,7 @@ const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-const outputPath = path.join(projectRoot, "lib/languages_enriched.ts");
+const outputPath = path.join(projectRoot, "lib/languages.ts");
 const fontLicenses = ["ofl", "ufl", "apache"] as const;
 const requestHeaders = {
   Accept: "application/vnd.github+json",
@@ -21,10 +21,67 @@ interface EnrichedLanguage {
   lang: string;
   text: string;
   font: string;
+  nativeName: string;
   fontAuthor: string | null;
   fontDescription: string | null;
+  fontUrl: string | null;
   wikiEntry: string | null;
+  wikiExtract: string | null;
+  wikiUrl: string | null;
 }
+
+const nativeNames: Record<string, string> = {
+  English: "English",
+  German: "Deutsch",
+  French: "Français",
+  Spanish: "Español",
+  Italian: "Italiano",
+  Portuguese: "Português",
+  Dutch: "Nederlands",
+  Russian: "Русский",
+  Ukrainian: "Українська",
+  Polish: "Polski",
+  Czech: "Čeština",
+  Swedish: "Svenska",
+  Norwegian: "Norsk",
+  Danish: "Dansk",
+  Finnish: "Suomi",
+  Greek: "Ελληνικά",
+  Turkish: "Türkçe",
+  Hungarian: "Magyar",
+  Romanian: "Română",
+  Hebrew: "עברית",
+  Arabic: "العربية",
+  Persian: "فارسی",
+  Urdu: "اردو",
+  Hindi: "हिन्दी",
+  Bengali: "বাংলা",
+  Tamil: "தமிழ்",
+  Telugu: "తెలుగు",
+  Marathi: "मराठी",
+  Gujarati: "ગુજરાતી",
+  Punjabi: "ਪੰਜਾਬੀ",
+  Thai: "ไทย",
+  Vietnamese: "Tiếng Việt",
+  Chinese: "中文",
+  Japanese: "日本語",
+  Korean: "한국어",
+  Indonesian: "Bahasa Indonesia",
+  Malay: "Bahasa Melayu",
+  Filipino: "Filipino",
+  Swahili: "Kiswahili",
+  Zulu: "isiZulu",
+  Amharic: "አማርኛ",
+  Georgian: "ქართული",
+  Armenian: "Հայերեն",
+  Icelandic: "Íslenska",
+  Irish: "Gaeilge",
+  Welsh: "Cymraeg",
+  Hawaiian: "ʻŌlelo Hawaiʻi",
+  "Scottish Gaelic": "Gàidhlig",
+  Latin: "Latina",
+  Esperanto: "Esperanto",
+};
 
 function normalizeName(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -60,7 +117,10 @@ async function fetchText(
       if (![429, 500, 502, 503, 504].includes(response.status)) return null;
       if (attempt < maxAttempts) await wait(retryDelay);
     } catch (error) {
-      console.warn(`Request failed, attempt ${attempt}/${maxAttempts}: ${url}`, error);
+      console.warn(
+        `Request failed, attempt ${attempt}/${maxAttempts}: ${url}`,
+        error,
+      );
       if (attempt < maxAttempts) await wait(1000 * 2 ** (attempt - 1));
     }
   }
@@ -81,7 +141,11 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-async function findWikiEntry(language: string): Promise<string | null> {
+async function findWikiDetails(language: string): Promise<{
+  entry: string | null;
+  extract: string | null;
+  url: string | null;
+}> {
   const candidates = [
     `${language}_language`.replace(/\s+/g, "_"),
     language.replace(/\s+/g, "_"),
@@ -93,15 +157,31 @@ async function findWikiEntry(language: string): Promise<string | null> {
     const responseText = await fetchText(url, {
       Accept: "application/json",
     });
-    if (responseText) return candidate;
+    if (responseText) {
+      try {
+        const summary = JSON.parse(responseText) as {
+          extract?: string;
+          content_urls?: { desktop?: { page?: string } };
+        };
+        return {
+          entry: candidate,
+          extract: summary.extract ?? null,
+          url: summary.content_urls?.desktop?.page ?? null,
+        };
+      } catch {
+        console.warn(`Could not parse Wikipedia summary: ${url}`);
+      }
+    }
   }
 
-  return null;
+  return { entry: null, extract: null, url: null };
 }
 
 async function getFontDetails(
   font: string,
-): Promise<Pick<EnrichedLanguage, "fontAuthor" | "fontDescription">> {
+): Promise<
+  Pick<EnrichedLanguage, "fontAuthor" | "fontDescription" | "fontUrl">
+> {
   const fontDir = normalizeName(font);
 
   for (const license of fontLicenses) {
@@ -110,15 +190,33 @@ async function getFontDetails(
     if (!metadataText) continue;
 
     const designerMatch = metadataText.match(/designer:\s*"([^"]+)"/);
-    const descriptionHtml = await fetchText(`${baseUrl}/DESCRIPTION.en_us.html`);
+    const descriptionHtml = await fetchText(
+      `${baseUrl}/DESCRIPTION.en_us.html`,
+    );
+    const description = descriptionHtml ? stripHtml(descriptionHtml) : null;
+    const githubMatch = description?.match(
+      /(?:https?:\/\/)?github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+/i,
+    );
+    const fontUrl = githubMatch
+      ? `https://${githubMatch[0].replace(/^https?:\/\//i, "")}`
+      : null;
+    const fontDescription =
+      description
+        ?.replace(
+          /\s+(?:To contribute|For more information about)[\s\S]*$/i,
+          "",
+        )
+        .trim() ?? null;
+
     return {
       fontAuthor: designerMatch?.[1] ?? null,
-      fontDescription: descriptionHtml ? stripHtml(descriptionHtml) : null,
+      fontDescription,
+      fontUrl,
     };
   }
 
   console.warn(`Font directory not found: ${font}`);
-  return { fontAuthor: null, fontDescription: null };
+  return { fontAuthor: null, fontDescription: null, fontUrl: null };
 }
 
 async function enrichLanguages(): Promise<void> {
@@ -126,21 +224,38 @@ async function enrichLanguages(): Promise<void> {
 
   for (const item of languages) {
     console.log(`Processing: ${item.lang}...`);
-    const wikiEntry = await findWikiEntry(item.lang);
+    const wiki = await findWikiDetails(item.lang);
     const fontDetails = await getFontDetails(item.font);
 
-    enriched.push({ ...item, ...fontDetails, wikiEntry });
+    enriched.push({
+      ...item,
+      nativeName: nativeNames[item.lang] ?? item.lang,
+      ...fontDetails,
+      wikiEntry: wiki.entry,
+      wikiExtract: wiki.extract,
+      wikiUrl: wiki.url,
+    });
   }
 
-  const fileContent = `import type { LanguageWord } from "./languages";
+  const fileContent = `export interface LanguageWord {
+  lang: string;
+  text: string;
+  font: string;
+}
 
 export interface EnrichedLanguageWord extends LanguageWord {
+  nativeName: string;
   fontAuthor: string | null;
   fontDescription: string | null;
+  fontUrl: string | null;
   wikiEntry: string | null;
+  wikiExtract: string | null;
+  wikiUrl: string | null;
 }
 
 export const languagesEnriched: EnrichedLanguageWord[] = ${JSON.stringify(enriched, null, 2)};
+
+export const languages: LanguageWord[] = languagesEnriched;
 `;
 
   await fs.writeFile(outputPath, fileContent, "utf8");
