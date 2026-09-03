@@ -91,14 +91,14 @@ export default function WordCloud() {
           }}
         >
           <span
-            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center whitespace-nowrap leading-none"
+            className="absolute left-1/2 top-1/2 flex items-center justify-center whitespace-nowrap leading-none"
             style={{
               width: word.rotation === 90 ? word.height : word.width,
               height: word.rotation === 90 ? word.width : word.height,
               fontFamily: `"${word.font}", sans-serif`,
               fontSize: word.fontSize,
               color: "#000",
-              transform: `rotate(${word.rotation}deg)`,
+              transform: `translate(-50%, -50%) rotate(${word.rotation}deg)`,
               transformOrigin: "center center",
             }}
           >
