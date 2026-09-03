@@ -9,6 +9,68 @@ body {
   overscroll-behavior: none;
 }
 
+.page-shell {
+  position: relative;
+  width: 100vw;
+  min-height: 100svh;
+}
+
+.word-cloud {
+  min-height: 100svh;
+}
+
+.word-cloud__label {
+  position: absolute;
+  top: max(26px, env(safe-area-inset-top));
+  left: 24px;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #55534d;
+  letter-spacing: 0;
+}
+
+.word-cloud__shuffle {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  right: 20px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 1px solid #cfcfca;
+  border-radius: 6px;
+  background: transparent;
+  color: #55534d;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.word-cloud__shuffle:focus-visible {
+  outline: 2px solid #4a4a46;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .word-cloud__label {
+    top: auto;
+    bottom: max(26px, env(safe-area-inset-bottom));
+    left: 16px;
+    right: 112px;
+    font-size: 13px;
+  }
+
+  .word-cloud__shuffle {
+    top: auto;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    right: 12px;
+    min-height: 44px;
+    padding: 8px 14px;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
