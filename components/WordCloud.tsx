@@ -288,8 +288,10 @@ export default function WordCloud() {
           }}
         >
           <span
-            className="flex h-full w-full items-center justify-center whitespace-nowrap leading-none"
+            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center whitespace-nowrap leading-none"
             style={{
+              width: w.rotation === 90 ? w.height : w.width,
+              height: w.rotation === 90 ? w.width : w.height,
               fontFamily: `"${w.font}", sans-serif`,
               fontSize: w.fontSize,
               color: "#000",
