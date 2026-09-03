@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "vitest"
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headless": "playwright test",
+    "test:e2e:headed": "playwright test --headed --workers=1"
   },
   "dependencies": {
     "eslint": "^9.39.5",
@@ -17,13 +21,16 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^20.14.9",
+    "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
+    "@vitest/coverage-v8": "^5.0.0",
     "postcss": "^8.5.27",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.5.3",
-    "vitest": "^4.1.11"
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
   }
 }
