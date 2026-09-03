@@ -157,8 +157,7 @@ export default function WordCloud() {
       }
 
       if (!found) {
-        // Last resort so every language still appears: place at a random
-        // in-bounds spot even if it slightly overlaps a neighbor.
+        // Continue the spiral beyond the viewport rather than forcing an overlap.
         const { width: textW, height: textH } = measure(
           ctx,
           word.text,
@@ -166,9 +165,37 @@ export default function WordCloud() {
           size,
         );
         const { w, h } = rotatedBounds(textW, textH, 0);
-        const x = Math.max(bounds.left, Math.random() * (width - w));
-        const y = Math.max(bounds.top, Math.random() * (height - h));
-        found = { x, y, w, h };
+        let t = 4200;
+        while (t < 8400) {
+          const angle = 0.15 * t;
+          const radius = 0.85 * t;
+          const x = cx + radius * Math.cos(angle) - w / 2;
+          const y = cy + radius * Math.sin(angle) * 0.62 - h / 2;
+          const rect: Rect = { left: x, top: y, right: x + w, bottom: y + h };
+
+          if (!placedRects.some((r) => rectsOverlap(rect, r, PADDING))) {
+            found = { x, y, w, h };
+            break;
+          }
+          t += 0.6;
+        }
+
+        if (!found) {
+          let x = width + PADDING;
+          const y = cy - h / 2;
+          while (
+            placedRects.some((r) =>
+              rectsOverlap(
+                { left: x, top: y, right: x + w, bottom: y + h },
+                r,
+                PADDING,
+              ),
+            )
+          ) {
+            x += w + PADDING;
+          }
+          found = { x, y, w, h };
+        }
         rotation = 0;
       }
 
@@ -278,20 +305,28 @@ export default function WordCloud() {
             top: w.y,
             width: w.width,
             height: w.height,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: `"${w.font}", sans-serif`,
-            fontSize: w.fontSize,
-            color: "#000",
-            transform: `rotate(${w.rotation}deg)`,
-            transformOrigin: "center center",
-            whiteSpace: "nowrap",
-            lineHeight: 1,
+            pointerEvents: "none",
             userSelect: "none",
           }}
         >
-          {w.text}
+          <span
+            style={{
+              display: "flex",
+              width: "100%",
+              height: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: `"${w.font}", sans-serif`,
+              fontSize: w.fontSize,
+              color: "#000",
+              transform: `rotate(${w.rotation}deg)`,
+              transformOrigin: "center center",
+              whiteSpace: "nowrap",
+              lineHeight: 1,
+            }}
+          >
+            {w.text}
+          </span>
         </span>
       ))}
     </div>
