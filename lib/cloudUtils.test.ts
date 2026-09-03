@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rectsOverlap, rotatedBounds, type Rect } from "./cloudUtils";
+import { rectsOverlap, rotatedBounds, measure, type Rect } from "./cloudUtils";
 
 const box = (
   left: number,
@@ -39,5 +39,60 @@ describe("rotatedBounds", () => {
   it("swaps width and height at 90 degrees", () => {
     expect(rotatedBounds(120, 40, 90).w).toBeCloseTo(40);
     expect(rotatedBounds(120, 40, 90).h).toBeCloseTo(120);
+  });
+});
+
+const createFakeCtx = (metrics: Partial<TextMetrics> = {}) => {
+  let assignedFont = "";
+  const ctx = {
+    set font(value: string) {
+      assignedFont = value;
+    },
+    measureText: () => metrics,
+  } as unknown as CanvasRenderingContext2D;
+
+  return { ctx, getAssignedFont: () => assignedFont };
+};
+
+describe("measure", () => {
+  it("assigns the requested font to the canvas context", () => {
+    const { ctx, getAssignedFont } = createFakeCtx({ width: 85 });
+
+    measure(ctx, "Hello", "Arial", 20);
+
+    expect(getAssignedFont()).toBe('400 20px "Arial", sans-serif');
+  });
+
+  it("uses the measured ascent and descent when available", () => {
+    const { ctx } = createFakeCtx({
+      width: 85,
+      actualBoundingBoxAscent: 15,
+      actualBoundingBoxDescent: 5,
+    });
+
+    const result = measure(ctx, "Hello", "Arial", 20);
+
+    expect(result).toEqual({ width: 85, height: 20 });
+  });
+
+  it("uses fallback fontSize calculations when bounding box metrics are unavailable", () => {
+    const { ctx } = createFakeCtx({
+      width: 85,
+    });
+    const result = measure(ctx, "Hello", "Arial", 20);
+    expect(result.width).toBe(85);
+    expect(result.height).toBe(20);
+  });
+
+  it("falls back for invalid ascent and descent metrics", () => {
+    const { ctx } = createFakeCtx({
+      width: 85,
+      actualBoundingBoxAscent: Number.NaN,
+      actualBoundingBoxDescent: Number.NaN,
+    });
+
+    const result = measure(ctx, "Hello", "Arial", 30);
+
+    expect(result).toEqual({ width: 85, height: 30 });
   });
 });
