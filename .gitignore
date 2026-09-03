@@ -3,6 +3,7 @@ node_modules
 out
 coverage
 test-results
+tsconfig.tsbuildinfo
 .env*.local
 npm-debug.log*
 .DS_Store
