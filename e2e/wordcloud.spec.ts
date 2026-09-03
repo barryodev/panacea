@@ -95,7 +95,9 @@ test.describe("word cloud", () => {
     expect(layout.shuffleBottom).toBeGreaterThan(760);
   });
 
-  test("keeps desktop words within the visible cloud area", async ({ page }) => {
+  test("keeps desktop words within the visible cloud area", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/");
 
@@ -109,7 +111,12 @@ test.describe("word cloud", () => {
         bottom: cloudRect.bottom,
         words: words.map((word) => {
           const rect = word.getBoundingClientRect();
-          return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+          return {
+            left: rect.left,
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+          };
         }),
       };
     });
@@ -124,7 +131,9 @@ test.describe("word cloud", () => {
     }
   });
 
-  test("recalculates the layout when the viewport changes", async ({ page }) => {
+  test("recalculates the layout when the viewport changes", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/");
     const button = page.getByRole("button", { name: "Shuffle" });
@@ -137,7 +146,9 @@ test.describe("word cloud", () => {
       .toBeGreaterThan(760);
   });
 
-  test("waits for fonts and renders words with dimensions", async ({ page }) => {
+  test("waits for fonts and renders words with dimensions", async ({
+    page,
+  }) => {
     await page.goto("/");
     await page.evaluate(() => document.fonts.ready);
 
@@ -145,7 +156,11 @@ test.describe("word cloud", () => {
     const details = await english.evaluate((element) => {
       const style = getComputedStyle(element);
       const rect = element.getBoundingClientRect();
-      return { fontFamily: style.fontFamily, width: rect.width, height: rect.height };
+      return {
+        fontFamily: style.fontFamily,
+        width: rect.width,
+        height: rect.height,
+      };
     });
 
     expect(details.fontFamily).toContain("Permanent Marker");
@@ -153,7 +168,9 @@ test.describe("word cloud", () => {
     expect(details.height).toBeGreaterThan(0);
   });
 
-  test("supports keyboard shuffle and exposes language tooltips", async ({ page }) => {
+  test("supports keyboard shuffle and exposes language tooltips", async ({
+    page,
+  }) => {
     await page.goto("/");
     const button = page.getByRole("button", { name: "Shuffle" });
 
@@ -162,6 +179,9 @@ test.describe("word cloud", () => {
     await page.keyboard.press("Enter");
     await expect(page.locator("[title]")).toHaveCount(50);
 
-    await expect(page.getByTitle("English")).toHaveAttribute("title", "English");
+    await expect(page.getByTitle("English")).toHaveAttribute(
+      "title",
+      "English",
+    );
   });
 });
