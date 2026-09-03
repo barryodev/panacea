@@ -34,10 +34,8 @@ function rectsOverlap(a: Rect, b: Rect, padding: number): boolean {
 
 function pickRotation(): number {
   const roll = Math.random();
-  if (roll < 0.55) return 0;
-  if (roll < 0.7) return 90;
-  if (roll < 0.85) return -90;
-  return Math.random() * 50 - 25; // gentle diagonal, -25..25deg
+  if (roll < 0.65) return 0;
+  return 90;
 }
 
 function measure(
