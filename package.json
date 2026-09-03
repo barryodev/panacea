@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest"
   },
   "dependencies": {
     "eslint": "^9.39.5",
@@ -22,6 +23,7 @@
     "@types/react-dom": "^19.2.5",
     "postcss": "^8.5.27",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "vitest": "^4.1.11"
   }
 }
