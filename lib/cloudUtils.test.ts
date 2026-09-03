@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { rectsOverlap, rotatedBounds, measure, type Rect } from "./cloudUtils";
+import { describe, expect, it, vi } from "vitest";
+import {
+  measure,
+  pickRotation,
+  rectsOverlap,
+  rotatedBounds,
+  type Rect,
+} from "./cloudUtils";
 
 const box = (
   left: number,
@@ -28,6 +34,40 @@ describe("rectsOverlap", () => {
 
   it("treats padding as part of the collision gap", () => {
     expect(rectsOverlap(box(0, 0, 10, 10), box(15, 0, 25, 10), 6)).toBe(true);
+  });
+
+  it("detects boxes separated to the left", () => {
+    expect(rectsOverlap(box(0, 0, 10, 10), box(17, 0, 27, 10), 0)).toBe(false);
+  });
+
+  it("detects boxes separated to the right", () => {
+    expect(rectsOverlap(box(17, 0, 27, 10), box(0, 0, 10, 10), 0)).toBe(false);
+  });
+
+  it("detects boxes separated above", () => {
+    expect(rectsOverlap(box(0, 0, 10, 10), box(0, 17, 10, 27), 0)).toBe(false);
+  });
+
+  it("detects boxes separated below", () => {
+    expect(rectsOverlap(box(0, 17, 10, 27), box(0, 0, 10, 10), 0)).toBe(false);
+  });
+});
+
+describe("pickRotation", () => {
+  it("returns 0 below the rotation threshold", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.64);
+
+    expect(pickRotation()).toBe(0);
+
+    vi.restoreAllMocks();
+  });
+
+  it("returns 90 at or above the rotation threshold", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.65);
+
+    expect(pickRotation()).toBe(90);
+
+    vi.restoreAllMocks();
   });
 });
 
@@ -94,5 +134,17 @@ describe("measure", () => {
     const result = measure(ctx, "Hello", "Arial", 30);
 
     expect(result).toEqual({ width: 85, height: 30 });
+  });
+
+  it("uses the final height fallback when measured metrics sum to zero", () => {
+    const { ctx } = createFakeCtx({
+      width: 85,
+      actualBoundingBoxAscent: 10,
+      actualBoundingBoxDescent: -10,
+    });
+
+    const result = measure(ctx, "Hello", "Arial", 20);
+
+    expect(result).toEqual({ width: 85, height: 23 });
   });
 });
